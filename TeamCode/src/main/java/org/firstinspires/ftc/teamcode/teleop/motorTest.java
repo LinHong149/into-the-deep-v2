@@ -56,6 +56,9 @@ public class motorTest extends LinearOpMode {
             } else {
                 motor3.setPower(0.0);
             }
+            telemetry.addData("slide1",motor0.getCurrentPosition());
+            telemetry.addData("slide2",motor1.getCurrentPosition());
+            telemetry.addData("arm",motor3.getCurrentPosition());
 
             telemetry.addData("motor0/1 Power", motor0.getPower()); // motor0 and motor1 will have the same power
             telemetry.addData("motor2 Power", motor2.getPower());
