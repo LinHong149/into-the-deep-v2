@@ -23,8 +23,8 @@ public class sample extends LinearOpMode{
     DcMotorEx AMotor, S1Motor, S2Motor, FL, FR, BL, BR = null;
     Servo rotation, wrist, claw;
 
-    public double wristPar = 0, wristPerp = 0.55, wristOuttake = 0.75;
-    public double clawOpen = 0.2, clawClose = 0.52;
+    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
+    public double clawOpen = 0.25, clawClose = 0.75;
     public double rotationPos = 0.5;
     public double armPar = 325, armUp = 1650;
     public int slideInterval = 15;
@@ -74,10 +74,10 @@ public class sample extends LinearOpMode{
         AMotor = hardwareMap.get(DcMotorEx.class, "AMotor");
         S1Motor = hardwareMap.get(DcMotorEx.class, "S1Motor");
         S2Motor = hardwareMap.get(DcMotorEx.class, "S2Motor");
-        FL = hardwareMap.get(DcMotorEx.class,"frontLeftMotor");
-        FR = hardwareMap.get(DcMotorEx.class,"frontRightMotor");
-        BL = hardwareMap.get(DcMotorEx.class,"backLeftMotor");
-        BR = hardwareMap.get(DcMotorEx.class,"backRightMotor");
+        FL = hardwareMap.get(DcMotorEx.class,"FL");
+        FR = hardwareMap.get(DcMotorEx.class,"FR");
+        BL = hardwareMap.get(DcMotorEx.class,"BL");
+        BR = hardwareMap.get(DcMotorEx.class,"BR");
 
 
         rotation = hardwareMap.get(Servo.class,"rotation");

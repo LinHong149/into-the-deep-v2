@@ -1,20 +1,27 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+@Config
 @TeleOp
 public class PIDTuning extends LinearOpMode {
+    FtcDashboard dashboard = FtcDashboard.getInstance();
+    Telemetry dashboardTelemetry = dashboard.getTelemetry();
+
     public DcMotorEx S1Motor, S2Motor, AMotor, FL, FR, BR, BL;
 
-    public double clawROpen = 0.2, clawRClose = 0.52;
+    public double clawROpen = 0.25, clawRClose = 0.75;
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    public static double armP = 0.0025, armI = 0, armD = 0.000023, armF = 0;
+    public static double armP = 0, armI = 0, armD = 0, armF = 0;
     //    extended PID
-    public static double armPE = 0.003, armIE = 0, armDE = 0.000023, armFE = 0;
+    public static double armPE = 0, armIE = 0, armDE = 0, armFE = 0;
     public static double armTarget = 0.0;
     public double armPower = 0.0;
 
@@ -24,6 +31,9 @@ public class PIDTuning extends LinearOpMode {
     public static double slidePE = 0.045, slideIE = 0, slideDE = 0.0004, slideFE = 0;
     public static double slideTarget = 0.0;
     public double slidePower = 0.0;
+    // slide down -> p: 0.045, d: 0.00019, max: 2000
+    //slide extended -> p:0.045, d:0.00026, max:3200
+    // arm down -> p: 0.02, d: 0.00022, min 250? max 1300
 
     public enum Mode {
         INTAKING,
@@ -66,7 +76,7 @@ public class PIDTuning extends LinearOpMode {
 
         S1Motor.setDirection(DcMotorEx.Direction.REVERSE);
         S2Motor.setDirection(DcMotorEx.Direction.REVERSE);
-        AMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        AMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         S1Motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         S2Motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
@@ -95,14 +105,19 @@ public class PIDTuning extends LinearOpMode {
             armPower = armPIDF(armTarget, AMotor);
             AMotor.setPower(armPower);
 
-            slidePower = slidePIDF(slideTarget, S1Motor);
+            slidePower = slidePIDF(slideTarget, S1Motor,S2Motor);
             S1Motor.setPower(slidePower);
             S2Motor.setPower(slidePower);
-
+            dashboardTelemetry.addData("slideTarget",slideTarget);
+            dashboardTelemetry.addData("s1",S1Motor.getCurrentPosition());
+            dashboardTelemetry.addData("s2",S2Motor.getCurrentPosition());
+            dashboardTelemetry.addData("armTarget",armTarget);
+            dashboardTelemetry.addData("arm",AMotor.getCurrentPosition());
             telemetry.addData("armTarget", armTarget);
             telemetry.addData("armPower", armPower);
             telemetry.addData("slideTarget", slideTarget);
             telemetry.addData("slidePower", slidePower);
+            dashboardTelemetry.update();
             telemetry.update();
         }
     }
@@ -115,9 +130,9 @@ public class PIDTuning extends LinearOpMode {
         return output;
     }
 
-    public double slidePIDF(double target, DcMotorEx motor){
+    public double slidePIDF(double target, DcMotorEx motor,DcMotorEx motor2){
         slidePIDF.setPIDF(slidePE,slideIE,slideDE,slideFE);
-        int currentPosition = motor.getCurrentPosition();
+        int currentPosition = (motor.getCurrentPosition()+motor2.getCurrentPosition())/2;
         double output = slidePIDF.calculate(currentPosition, target);
 
         return output;

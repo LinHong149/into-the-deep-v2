@@ -10,14 +10,21 @@ public class motorTest extends LinearOpMode {
     private DcMotor motor0;
     private DcMotor motor1;
     private DcMotor motor2;
-    private DcMotor motor3;
 
     public void initHardware() {
-        motor0 = hardwareMap.get(DcMotor.class, "motor0");
-        motor1 = hardwareMap.get(DcMotor.class, "motor1");
-        motor2 = hardwareMap.get(DcMotor.class, "motor2");
-        motor3 = hardwareMap.get(DcMotor.class, "motor3");
+        motor0 = hardwareMap.get(DcMotor.class, "S1Motor");
+        motor1 = hardwareMap.get(DcMotor.class, "S2Motor");
+        motor2 = hardwareMap.get(DcMotor.class, "AMotor");
 
+        motor0.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor0.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         // motor0.setDirection(DcMotor.Direction.REVERSE);
         // motor1.setDirection(DcMotor.Direction.REVERSE);
         // motor2.setDirection(DcMotor.Direction.REVERSE);
@@ -49,17 +56,11 @@ public class motorTest extends LinearOpMode {
                 motor2.setPower(0.0);
             }
 
-            if (gamepad1.dpad_up) {
-                motor3.setPower(-1.0);
-            } else if (gamepad1.dpad_down) {
-                motor3.setPower(1.0);
-            } else {
-                motor3.setPower(0.0);
-            }
 
             telemetry.addData("motor0/1 Power", motor0.getPower()); // motor0 and motor1 will have the same power
             telemetry.addData("motor2 Power", motor2.getPower());
-            telemetry.addData("motor3 Power", motor3.getPower());
+            telemetry.addData("arm pos",motor2.getCurrentPosition());
+
             telemetry.update();
         }
     }
