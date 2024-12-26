@@ -20,25 +20,25 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class sample extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
+
     DcMotorEx AMotor, S1Motor, S2Motor, FL, FR, BL, BR = null;
     Servo rotation, wrist, claw;
 
     public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
     public double clawOpen = 0.25, clawClose = 0.75;
     public double rotationPos = 0.5;
-    public double armPar = 325, armUp = 1650;
+    public double armPar = 250, armUp = 1300;
     public int slideInterval = 15;
 
     //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    static double armP = 0.0025, armI = 0, armD = 0.000023, armF = 0;
-    static double armPE = 0.003, armIE = 0, armDE = 0.000023, armFE = 0;
+    static double armP = 0.02, armI = 0, armD = 0.00022, armF = 0;
     static double armTarget = 0.0;
 
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    static double slideP = 0.017, slideI = 0, slideD = 0.00018, slideF = 0;
-    static double slidePE = 0.045, slideIE = 0, slideDE = 0.0004, slideFE = 0;
+    static double slideP = 0.045, slideI = 0, slideD = 0.00019, slideF = 0;
+    static double slidePE = 0.045, slideIE = 0, slideDE = 0.00026, slideFE = 0;
     static double slideTarget = 0.0;
     double slidePower = 0.0;
 
@@ -57,8 +57,8 @@ public class sample extends LinearOpMode{
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
-    double armMax = 2300;
-    double slideMax = 2900;
+    double armMax = 1300;
+    double slideMax = 3200;
 
     public enum Mode {
         REST,
@@ -106,32 +106,31 @@ public class sample extends LinearOpMode{
         AMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         AMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         AMotor.setPower(0);
-        armTarget = 800;
 
         S1Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         S1Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         S1Motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        S1Motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        S1Motor.setDirection(DcMotorSimple.Direction.REVERSE);
         S1Motor.setPower(0);
 
         S2Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         S2Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         S2Motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        S2Motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        S2Motor.setDirection(DcMotorSimple.Direction.REVERSE);
         S2Motor.setPower(0);
-
-        armTarget = 800;
-//        Runs to arm pose
-        ElapsedTime timer = new ElapsedTime();
-        while (Math.abs(AMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 3 seconds
-            double power = armPIDF(armTarget, AMotor);
-            AMotor.setPower(power);
-
-            telemetry.addData("Arm Position", AMotor.getCurrentPosition());
-            telemetry.addData("Arm Target", armTarget);
-            telemetry.update();
-        }
-        AMotor.setPower(0);
+//
+//        armTarget = 800;
+////        Runs to arm pose
+//        ElapsedTime timer = new ElapsedTime();
+//        while (Math.abs(AMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 3 seconds
+//            double power = armPIDF(armTarget, AMotor);
+//            AMotor.setPower(power);
+//
+//            telemetry.addData("Arm Position", AMotor.getCurrentPosition());
+//            telemetry.addData("Arm Target", armTarget);
+//            telemetry.update();
+//        }
+//        AMotor.setPower(0);
     }
 
 //
@@ -187,7 +186,7 @@ public class sample extends LinearOpMode{
 //                    }
 //                }
                 slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/1.5:0;
-                slideTarget += (y<0 && slideTarget>500) ? slideInterval*y/1.5:0;
+                slideTarget += (y<0 && slideTarget>400) ? slideInterval*y/1.5:0;
                 if (gamepad1.left_trigger > 0 && rotationPos >=0 ) {
                     rotationPos -= gamepad1.left_trigger / 80;
                     if (rotationPos <0) rotationPos = 1; // Ensure upper bound
@@ -206,7 +205,7 @@ public class sample extends LinearOpMode{
                 AMotor.setPower(0);
             }
             if (slideTarget >= 200 && slideTarget <= slideMax) {
-                slidePower = slidePIDF(slideTarget, S1Motor);
+                slidePower = slidePIDF(slideTarget, S1Motor,S2Motor);
                 S1Motor.setPower(slidePower);
                 S2Motor.setPower(slidePower);
             }else{
@@ -215,14 +214,14 @@ public class sample extends LinearOpMode{
             }
 
             if (mode==Mode.INTAKING || micro){
-                slideMax = 2900;
+                slideMax = 2000;
             }else{
-                slideMax = 5300;
+                slideMax = 3200;
             }
 
 
 //  CLAW
-            if (gamepad1.a && mode != Mode.HANG) {
+            if (gamepad1.a) {
                 if (!clawPressed) {
                     clawPressed=true;
                     clawIsOpen = !clawIsOpen;
@@ -240,7 +239,7 @@ public class sample extends LinearOpMode{
 //  SLIDES
             slideTarget += (gamepad1.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
             slideTarget -= (gamepad1.dpad_down && slideTarget>500) ? slideInterval : 0;
-            slideTarget = Math.min(5300, Math.max(200, slideTarget));
+            slideTarget = Math.min(3200, Math.max(200, slideTarget));
 
             slideExtended = slideTarget > 300;
 
@@ -248,9 +247,8 @@ public class sample extends LinearOpMode{
 
             armTempTarget += (gamepad1.left_trigger > 0 && !micro) ? 3 : 0;
             armTempTarget -= (gamepad1.right_trigger > 0 && !micro) ? 3 : 0;
-            armTempTarget = Math.min(2300, Math.max(0, armTempTarget));
+            armTempTarget = Math.min(1350, Math.max(0, armTempTarget));
 
-            armPar = (slideTarget > 300) ? 325 : 400;
 
 //             /\_/\
 //            ( o.o )
@@ -265,26 +263,19 @@ public class sample extends LinearOpMode{
                     slideInterval = 24;
                     init = true;
                 } else if (mode == Mode.OUTTAKING) {
-                    retractSlide=true;
                     slideTarget = 500;
+                    mode = Mode.REST;
+                    init = true;
                 } else if (mode == Mode.INTAKING){
                     micro = false;
                     armTempTarget = armPar;
                     wrist.setPosition(wristPerp);
                     armTarget = armTempTarget;
-//                    retractSlide = true;
                     slideTarget = 200;
                 }
             }
             rightBumperPrevState = rightBumperCurrentState;
-// RETRACT SLIDE
-            if (retractSlide) {
-                slideTarget = 200;
-                if (S1Motor.getCurrentPosition() < 1800) {
-                    retractSlide = false;
-                    mode=Mode.REST;
-                    init = true;
-                }
+
 
             }
 
@@ -323,17 +314,11 @@ public class sample extends LinearOpMode{
 
 
 
-                    if (slideTarget > 300) {
-                        retracted = false;
-                        mode = Mode.INTAKING;
-                        init = true;
-                    }
-
                     boolean intakeCurr = gamepad1.left_bumper;
                     if (intakeCurr && !intakePrev){
                         micro = true;
                         rotationPos = 0.5;
-                        slideTarget = 1500;
+                        slideTarget = 1000;
                         mode = Mode.INTAKING;
                         init = true;
                     }
@@ -354,11 +339,6 @@ public class sample extends LinearOpMode{
 //  LOWER ARM
                     armTarget = (gamepad1.left_bumper) ? 175 : armTempTarget;
 
-//  CHANGE TO REST
-                    if (slideTarget <= 250){
-                        mode = Mode.REST;
-                        init = true;//retract slide < 70; rest <= 80; intaking > 80
-                    }
 
                     break;
 
@@ -374,8 +354,8 @@ public class sample extends LinearOpMode{
                     }
                     init = false;
 
-                    if (slideOuttake && armTempTarget-AMotor.getCurrentPosition()<1000){
-                        slideTarget = slideMax;
+                    if (slideOuttake && armTempTarget-AMotor.getCurrentPosition()<500){
+                        slideTarget = 2000;
                         slideOuttake = false;
                     }
 
@@ -394,8 +374,8 @@ public class sample extends LinearOpMode{
                 case HANG:
                     if (init) {
                         clawIsOpen = false;
-                        armTarget = 1200;
-                        slideTarget = 1300;
+                        armTarget = 700;
+                        slideTarget = 800;
                         wrist.setPosition(wristPar);
                         rotation.setPosition(0.5);
                     }
@@ -414,37 +394,30 @@ public class sample extends LinearOpMode{
             telemetry.addData("rotation",rotationPos);
             telemetry.addData("init",init);
 
-            telemetry.addData("hello", "hellow");
-
             telemetry.update();
             dashboardTelemetry.update();
 
         }
-    }
+
 
     public double armPIDF(double target, DcMotorEx motor){
-        if (slideExtended) {
-            armPIDF.setPIDF(armPE,armIE,armDE,armFE);
-        } else {
-            armPIDF.setPIDF(armP,armI,armD,armF);
-        }
+        armPIDF.setPIDF(armP,armI,armD,armF);
         int currentPosition = motor.getCurrentPosition();
         double output = armPIDF.calculate(currentPosition, target);
 
-        telemetry.update();
         return output;
     }
 
-    public double slidePIDF(double target, DcMotorEx motor){
+    public double slidePIDF(double target, DcMotorEx motor,DcMotorEx motor2){
         if (mode == Mode.OUTTAKING){
             slidePIDF.setPIDF(slidePE,slideIE,slideDE,slideFE);
         }else {
             slidePIDF.setPIDF(slideP, slideI, slideD, slideF);
         }
-        int currentPosition = motor.getCurrentPosition();
+        int currentPosition = (motor.getCurrentPosition()+motor2.getCurrentPosition())/2;
         double output = slidePIDF.calculate(currentPosition, target);
 
-        telemetry.update();
+
         return output;
     }
 
