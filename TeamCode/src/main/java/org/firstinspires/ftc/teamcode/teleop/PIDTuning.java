@@ -21,14 +21,12 @@ public class PIDTuning extends LinearOpMode {
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
     public static double armP = 0, armI = 0, armD = 0, armF = 0;
     //    extended PID
-    public static double armPE = 0, armIE = 0, armDE = 0, armFE = 0;
     public static double armTarget = 0.0;
     public double armPower = 0.0;
 
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
     public static double slideP = 0.017, slideI = 0, slideD = 0.00018, slideF = 0;
-    public static double slidePE = 0.045, slideIE = 0, slideDE = 0.0004, slideFE = 0;
     public static double slideTarget = 0.0;
     public double slidePower = 0.0;
     // slide down -> p: 0.045, d: 0.00019, max: 2000
@@ -102,6 +100,10 @@ public class PIDTuning extends LinearOpMode {
         waitForStart();
 
         while(opModeIsActive()){
+
+            armTarget = Math.max(200, Math.min(1350, armTarget));
+            slideTarget = Math.max(200, Math.min(3500, slideTarget));
+
             armPower = armPIDF(armTarget, AMotor);
             AMotor.setPower(armPower);
 
@@ -123,7 +125,7 @@ public class PIDTuning extends LinearOpMode {
     }
 
     public double armPIDF(double target, DcMotorEx motor){
-        armPIDF.setPIDF(armPE,armIE,armDE,armFE);
+        armPIDF.setPIDF(armP,armI,armD,armF);
         int currentPosition = motor.getCurrentPosition();
         double output = armPIDF.calculate(currentPosition, target);
 
@@ -131,7 +133,7 @@ public class PIDTuning extends LinearOpMode {
     }
 
     public double slidePIDF(double target, DcMotorEx motor,DcMotorEx motor2){
-        slidePIDF.setPIDF(slidePE,slideIE,slideDE,slideFE);
+        slidePIDF.setPIDF(slideP,slideI,slideD,slideF);
         int currentPosition = (motor.getCurrentPosition()+motor2.getCurrentPosition())/2;
         double output = slidePIDF.calculate(currentPosition, target);
 

@@ -15,7 +15,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 
-
 @TeleOp
 public class sample extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
@@ -26,19 +25,21 @@ public class sample extends LinearOpMode{
 
     public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
     public double clawOpen = 0.25, clawClose = 0.75;
-    public double rotationPos = 0.5;
-    public double armPar = 250, armUp = 1300;
+    public double rotationPos = 0.47;
+    public double armDown = 0;
+    public double armPar = 150, armUp = 1350;
     public int slideInterval = 15;
+    public double outToRestBuffer = 800, restToOuttake = 1000;
 
     //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    static double armP = 0.02, armI = 0, armD = 0.00022, armF = 0;
+    static double armP = 0.007, armI = 0, armD = 0, armF = 0;
     static double armTarget = 0.0;
 
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    static double slideP = 0.045, slideI = 0, slideD = 0.00019, slideF = 0;
-    static double slidePE = 0.045, slideIE = 0, slideDE = 0.00026, slideFE = 0;
+    static double slideP = 0.0034, slideI = 0, slideD = 0, slideF = 0;
+    static double slidePE = 0.008, slideIE = 0, slideDE = 0, slideFE = 0;
     static double slideTarget = 0.0;
     double slidePower = 0.0;
 
@@ -54,11 +55,12 @@ public class sample extends LinearOpMode{
     boolean slideOuttake = false;
     boolean micro = false;
     boolean intakePrev = false;
+    boolean slideRest = false;
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
-    double armMax = 1300;
-    double slideMax = 3200;
+    double armMax = 1350;
+    double slideMax = 2800;
 
     public enum Mode {
         REST,
@@ -158,7 +160,7 @@ public class sample extends LinearOpMode{
             double rx = gamepad1.right_stick_x;
 
             if (!micro) {
-                double denom = Math.max(Math.abs(x) + Math.abs(y) + Math.abs(rx),1);
+                double denom = Math.max(Math.abs(x) + Math.abs(y) + Math.abs(rx), 1);
                 frontLeftPower = (y + x + rx) / denom;
                 backLeftPower = (y - x + rx) / denom;
                 frontRightPower = (y - x - rx) / denom;
@@ -168,13 +170,13 @@ public class sample extends LinearOpMode{
                 FR.setPower(frontRightPower);
                 BL.setPower(backLeftPower);
                 BR.setPower(backRightPower);
-            }else{
+            } else {
                 //TODO trig calculation for rotation
 
-                frontLeftPower = rx/3;
-                backLeftPower = rx/3;
-                frontRightPower = -rx/3;
-                backRightPower = -rx/3;
+                frontLeftPower = rx / 3;
+                backLeftPower = rx / 3;
+                frontRightPower = -rx / 3;
+                backRightPower = -rx / 3;
 
                 FL.setPower(frontLeftPower);
                 FR.setPower(frontRightPower);
@@ -185,15 +187,15 @@ public class sample extends LinearOpMode{
 //                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
 //                    }
 //                }
-                slideTarget += (y>0 && slideTarget<slideMax) ? slideInterval*y/1.5:0;
-                slideTarget += (y<0 && slideTarget>400) ? slideInterval*y/1.5:0;
-                if (gamepad1.left_trigger > 0 && rotationPos >=0 ) {
+                slideTarget += (y > 0 && slideTarget < slideMax) ? slideInterval * y / 1.5 : 0;
+                slideTarget += (y < 0 && slideTarget > 300) ? slideInterval * y / 1.5 : 0;
+                if (gamepad1.left_trigger > 0 && rotationPos >= 0) {
                     rotationPos -= gamepad1.left_trigger / 80;
-                    if (rotationPos <0) rotationPos = 1; // Ensure upper bound
+                    if (rotationPos < 0) rotationPos = 1; // Ensure upper bound
                 }
-                if (gamepad1.right_trigger > 0 && rotationPos <=1) {
+                if (gamepad1.right_trigger > 0 && rotationPos <= 1) {
                     rotationPos += gamepad1.right_trigger / 80;
-                    if (rotationPos >1) rotationPos = 0; // Ensure lower bound
+                    if (rotationPos > 1) rotationPos = 0; // Ensure lower bound
                 }
                 rotation.setPosition(rotationPos);
             }
@@ -201,45 +203,45 @@ public class sample extends LinearOpMode{
 //  ARM & SLIDE PID
             if (armTarget >= 0 && armTarget <= armMax) {
                 AMotor.setPower(armPIDF(armTarget, AMotor));
-            }else{
+            } else {
                 AMotor.setPower(0);
             }
             if (slideTarget >= 200 && slideTarget <= slideMax) {
-                slidePower = slidePIDF(slideTarget, S1Motor,S2Motor);
+                slidePower = slidePIDF(slideTarget, S1Motor, S2Motor);
                 S1Motor.setPower(slidePower);
                 S2Motor.setPower(slidePower);
-            }else{
+            } else {
                 S1Motor.setPower(0);
                 S2Motor.setPower(0);
             }
 
-            if (mode==Mode.INTAKING || micro){
+            if (mode == Mode.INTAKING || micro) {
                 slideMax = 2000;
-            }else{
-                slideMax = 3200;
+            } else {
+                slideMax = 2800;
             }
 
 
 //  CLAW
             if (gamepad1.a) {
                 if (!clawPressed) {
-                    clawPressed=true;
+                    clawPressed = true;
                     clawIsOpen = !clawIsOpen;
                 }
             } else {
                 clawPressed = false;
             }
 
-            if (!clawIsOpen){
+            if (!clawIsOpen) {
                 claw.setPosition(clawClose);
-            }else{
+            } else {
                 claw.setPosition(clawOpen);
             }
 
 //  SLIDES
-            slideTarget += (gamepad1.dpad_up && slideTarget<slideMax) ? slideInterval : 0;
-            slideTarget -= (gamepad1.dpad_down && slideTarget>500) ? slideInterval : 0;
-            slideTarget = Math.min(3200, Math.max(200, slideTarget));
+            slideTarget += (gamepad1.dpad_up && slideTarget < slideMax) ? slideInterval : 0;
+            slideTarget -= (gamepad1.dpad_down && slideTarget > 500) ? slideInterval : 0;
+            slideTarget = Math.min(2800, Math.max(200, slideTarget));
 
             slideExtended = slideTarget > 300;
 
@@ -263,24 +265,19 @@ public class sample extends LinearOpMode{
                     slideInterval = 24;
                     init = true;
                 } else if (mode == Mode.OUTTAKING) {
-                    slideTarget = 500;
                     mode = Mode.REST;
                     init = true;
-                } else if (mode == Mode.INTAKING){
-                    micro = false;
-                    armTempTarget = armPar;
+                } else if (mode == Mode.INTAKING) {
                     wrist.setPosition(wristPerp);
-                    armTarget = armTempTarget;
-                    slideTarget = 200;
+                    micro = false;
+                    mode = Mode.REST;
+                    init = true;
                 }
             }
             rightBumperPrevState = rightBumperCurrentState;
 
 
-            }
-
-
-            telemetry.addData("retract",retractSlide);
+            telemetry.addData("retract", retractSlide);
 
 
             boolean hangCurr = gamepad1.left_stick_button;
@@ -295,17 +292,23 @@ public class sample extends LinearOpMode{
             hangPrev = hangCurr;
 
 
-            telemetry.addData("mode type",mode);
+            telemetry.addData("mode type", mode);
             switch (mode) {
 /** REST */
                 case REST:
                     if (init) {
-                        wrist.setPosition(wristPerp);
                         slideTarget = 200;
-                        armTempTarget = armPar;
                         rotation.setPosition(0.5);
+                        slideRest = true;
                     }
                     init = false;
+
+
+                    if (slideRest && S1Motor.getCurrentPosition()-200 < outToRestBuffer) { //distance from slide retracted
+                        armTempTarget = armPar;
+                        slideRest = false;
+                        wrist.setPosition(wristPerp);
+                    }
 
 // ARM POSITION
                     armTarget = armTempTarget;
@@ -313,9 +316,8 @@ public class sample extends LinearOpMode{
 // CHANGE TO INTAKING
 
 
-
                     boolean intakeCurr = gamepad1.left_bumper;
-                    if (intakeCurr && !intakePrev){
+                    if (intakeCurr && !intakePrev) {
                         micro = true;
                         rotationPos = 0.5;
                         slideTarget = 1000;
@@ -337,7 +339,7 @@ public class sample extends LinearOpMode{
 
 
 //  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? 175 : armTempTarget;
+                    armTarget = (gamepad1.left_bumper) ? armDown : armTempTarget;
 
 
                     break;
@@ -354,14 +356,14 @@ public class sample extends LinearOpMode{
                     }
                     init = false;
 
-                    if (slideOuttake && armTempTarget-AMotor.getCurrentPosition()<500){
-                        slideTarget = 2000;
+                    if (slideOuttake && armTempTarget - AMotor.getCurrentPosition() < restToOuttake) {
+                        slideTarget = slideMax;
                         slideOuttake = false;
                     }
 
-                    if (gamepad1.left_bumper){
+                    if (gamepad1.left_bumper) {
                         wrist.setPosition(wristOuttake);
-                    }else{
+                    } else {
                         wrist.setPosition(wristPar);
                     }
 
@@ -385,19 +387,20 @@ public class sample extends LinearOpMode{
             }
 
 
-            telemetry.addData("arm current",AMotor.getCurrentPosition());
-            telemetry.addData("arm target",armTarget);
-            telemetry.addData("slide1 current",S1Motor.getCurrentPosition());
-            telemetry.addData("slide2 current",S2Motor.getCurrentPosition());
-            telemetry.addData("slide target",slideTarget);
+            telemetry.addData("arm current", AMotor.getCurrentPosition());
+            telemetry.addData("arm target", armTarget);
+            telemetry.addData("slide1 current", S1Motor.getCurrentPosition());
+            telemetry.addData("slide2 current", S2Motor.getCurrentPosition());
+            telemetry.addData("slide target", slideTarget);
 
-            telemetry.addData("rotation",rotationPos);
-            telemetry.addData("init",init);
+            telemetry.addData("rotation", rotationPos);
+            telemetry.addData("init", init);
 
             telemetry.update();
             dashboardTelemetry.update();
 
         }
+    }
 
 
     public double armPIDF(double target, DcMotorEx motor){
