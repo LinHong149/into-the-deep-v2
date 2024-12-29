@@ -16,18 +16,18 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 
 @TeleOp
-public class sample extends LinearOpMode{
+public class specimen extends LinearOpMode{
     FtcDashboard dashboard = FtcDashboard.getInstance();
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
 
     DcMotorEx AMotor, S1Motor, S2Motor, FL, FR, BL, BR = null;
     Servo rotation, wrist, claw;
 
-    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
+    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.8;
     public double clawOpen = 0.25, clawClose = 0.75;
     public double rotationPos = 0.465;
     public double armDown = 50;
-    public double armPar = 150, armUp = 1200;
+    public double armPar = 100, armUp = 1130;
     public int slideInterval = 15;
     public double outToRestBuffer = 800, restToOuttake = 1000;
 
@@ -60,7 +60,7 @@ public class sample extends LinearOpMode{
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
     double armMax = 1350;
-    double slideMax = 2800;
+    double slideMax = 1400;
 
     public enum Mode {
         REST,
@@ -187,8 +187,8 @@ public class sample extends LinearOpMode{
 //                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
 //                    }
 //                }
-                slideTarget += (y > 0 && slideTarget < slideMax) ? slideInterval * y / 1.5 : 0;
-                slideTarget += (y < 0 && slideTarget > 300) ? slideInterval * y / 1.5 : 0;
+                slideTarget += (y > 0 && slideTarget < slideMax) ? 15 * y / 1.5 : 0;
+                slideTarget += (y < 0 && slideTarget > 300) ? 15 * y / 1.5 : 0;
                 if (gamepad1.left_trigger > 0 && rotationPos >= 0) {
                     rotationPos -= gamepad1.left_trigger / 80;
                     if (rotationPos < 0) rotationPos = 1; // Ensure upper bound
@@ -218,7 +218,7 @@ public class sample extends LinearOpMode{
             if (mode == Mode.INTAKING || micro) {
                 slideMax = 2000;
             } else {
-                slideMax = 2800;
+                slideMax = 1400;
             }
 
 
@@ -241,7 +241,7 @@ public class sample extends LinearOpMode{
 //  SLIDES
             slideTarget += (gamepad1.dpad_up && slideTarget < slideMax) ? slideInterval : 0;
             slideTarget -= (gamepad1.dpad_down && slideTarget > 500) ? slideInterval : 0;
-            slideTarget = Math.min(2800, Math.max(200, slideTarget));
+            slideTarget = Math.min(2000, Math.max(200, slideTarget));
 
             slideExtended = slideTarget > 300;
 
@@ -265,7 +265,6 @@ public class sample extends LinearOpMode{
                     slideInterval = 24;
                     init = true;
                 } else if (mode == Mode.OUTTAKING) {
-                    wrist.setPosition(wristPar);
                     mode = Mode.REST;
                     init = true;
                 } else if (mode == Mode.INTAKING) {
@@ -334,7 +333,7 @@ public class sample extends LinearOpMode{
                     if (init) {
                         wrist.setPosition(wristPar);
                         clawIsOpen = true;
-                        armTempTarget = armPar;
+                        armTempTarget = 150;
                     }
                     init = false;
 
@@ -355,15 +354,16 @@ public class sample extends LinearOpMode{
 
 
                     }
-                    init = false;
-                    if (S1Motor.getCurrentPosition()>1000){
+                    if (S1Motor.getCurrentPosition()>600){
                         wrist.setPosition(wristOuttake);
                     }
-                    if (slideOuttake && armTempTarget - AMotor.getCurrentPosition() < restToOuttake) {
-                        slideTarget = slideMax;
+                    init = false;
+                    slideTarget += (gamepad1.left_bumper && slideTarget<slideMax) ? slideInterval : 0;
+
+                    if (slideOuttake && armTempTarget-AMotor.getCurrentPosition()<200){
+                        slideTarget = 750;
                         slideOuttake = false;
                     }
-
 
 //  ARM
                     armTarget = armTempTarget;
