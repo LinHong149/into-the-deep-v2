@@ -26,8 +26,8 @@ public class sample extends LinearOpMode{
     public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
     public double clawOpen = 0.25, clawClose = 0.75;
     public double rotationPos = 0.465;
-    public double armDown = 50;
-    public double armPar = 150, armUp = 1200;
+    public double armDown = 30;
+    public double armPar = 150, armUp = 1250;
     public int slideInterval = 15;
     public double outToRestBuffer = 800, restToOuttake = 1000;
 
@@ -45,6 +45,8 @@ public class sample extends LinearOpMode{
 
 
     boolean rightBumperPrevState = false;
+    boolean switched = false;
+    boolean switchPrev = false;
     boolean hangPrev = false;
     boolean clawPressed = false;
     boolean clawIsOpen = false;
@@ -60,7 +62,7 @@ public class sample extends LinearOpMode{
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
     double armMax = 1350;
-    double slideMax = 2800;
+    double slideMax = 2900;
 
     public enum Mode {
         REST,
@@ -86,10 +88,10 @@ public class sample extends LinearOpMode{
         wrist = hardwareMap.get(Servo.class,"wrist");
         claw = hardwareMap.get(Servo.class,"claw");
 
-        FL.setDirection(DcMotorEx.Direction.FORWARD);
-        BL.setDirection(DcMotorEx.Direction.FORWARD);
-        FR.setDirection(DcMotorEx.Direction.REVERSE);
-        BR.setDirection(DcMotorEx.Direction.REVERSE);
+        FL.setDirection(DcMotorEx.Direction.REVERSE);
+        BL.setDirection(DcMotorEx.Direction.REVERSE);
+        FR.setDirection(DcMotorEx.Direction.FORWARD);
+        BR.setDirection(DcMotorEx.Direction.FORWARD);
         FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -218,7 +220,11 @@ public class sample extends LinearOpMode{
             if (mode == Mode.INTAKING || micro) {
                 slideMax = 2000;
             } else {
-                slideMax = 2800;
+                if (switched){
+                    slideMax = 1200;
+                }else {
+                    slideMax = 2900;
+                }
             }
 
 
@@ -241,7 +247,7 @@ public class sample extends LinearOpMode{
 //  SLIDES
             slideTarget += (gamepad1.dpad_up && slideTarget < slideMax) ? slideInterval : 0;
             slideTarget -= (gamepad1.dpad_down && slideTarget > 500) ? slideInterval : 0;
-            slideTarget = Math.min(2800, Math.max(200, slideTarget));
+            slideTarget = Math.min(2900, Math.max(200, slideTarget));
 
             slideExtended = slideTarget > 300;
 
@@ -279,6 +285,16 @@ public class sample extends LinearOpMode{
 
 
             telemetry.addData("retract", retractSlide);
+
+            boolean switchCurr = gamepad1.right_stick_button;
+            if (switchCurr && !switchPrev){
+                if (!switched){
+                    switched = true;
+                }else{
+                    switched = false;
+                }
+            }
+            switchPrev = switchCurr;
 
 
             boolean hangCurr = gamepad1.left_stick_button;

@@ -86,10 +86,10 @@ public class specimen extends LinearOpMode{
         wrist = hardwareMap.get(Servo.class,"wrist");
         claw = hardwareMap.get(Servo.class,"claw");
 
-        FL.setDirection(DcMotorEx.Direction.FORWARD);
-        BL.setDirection(DcMotorEx.Direction.FORWARD);
-        FR.setDirection(DcMotorEx.Direction.REVERSE);
-        BR.setDirection(DcMotorEx.Direction.REVERSE);
+        FL.setDirection(DcMotorEx.Direction.REVERSE);
+        BL.setDirection(DcMotorEx.Direction.REVERSE);
+        FR.setDirection(DcMotorEx.Direction.FORWARD);
+        BR.setDirection(DcMotorEx.Direction.FORWARD);
         FL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         FR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         BL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -265,6 +265,7 @@ public class specimen extends LinearOpMode{
                     slideInterval = 24;
                     init = true;
                 } else if (mode == Mode.OUTTAKING) {
+                    clawIsOpen = true;
                     mode = Mode.REST;
                     init = true;
                 } else if (mode == Mode.INTAKING) {
