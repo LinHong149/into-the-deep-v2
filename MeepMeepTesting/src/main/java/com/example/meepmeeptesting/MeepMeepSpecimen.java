@@ -9,7 +9,7 @@ import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepSpecimen {
     public static void main(String[] args) {
-        MeepMeep meepMeep = new MeepMeep(700);
+        MeepMeep meepMeep = new MeepMeep(500);
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
@@ -17,15 +17,30 @@ public class MeepMeepSpecimen {
                 .setDimensions(16.25, 17)
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(8, -61, Math.toRadians(90)))
                         .splineToConstantHeading(new Vector2d(0, -32), Math.toRadians(90)) //drop off pre loaded
-                        .splineToConstantHeading(new Vector2d(30, -40), Math.toRadians(0))
-                        .splineToConstantHeading(new Vector2d(44, -12), Math.toRadians(0))
-                        .back(40)
+                        .setTangent(Math.toRadians(315))
+                        .splineToConstantHeading(new Vector2d(30, -40), Math.toRadians(0)) //path around submersible
+                        .splineToConstantHeading(new Vector2d(44, -12), Math.toRadians(0)) //to first
+                        .back(40) //push observation zone
 
-                        .splineToConstantHeading(new Vector2d(56, -12), Math.toRadians(0))
-                        .back(40)
+                        .splineToConstantHeading(new Vector2d(56, -12), Math.toRadians(0)) //to second
+                        .back(40) //push observation zone
 
-                        .splineToConstantHeading(new Vector2d(62, -12), Math.toRadians(0))
-                        .back(40)
+                        .splineToConstantHeading(new Vector2d(62, -12), Math.toRadians(0)) //to third
+                        .back(40)//push observation zone
+                        .setTangent(Math.toRadians(120))
+                        .splineToLinearHeading(new Pose2d(36,-59,Math.toRadians(270)),Math.toRadians(270)) //pickup
+                        .splineToLinearHeading(new Pose2d(0,-32,Math.toRadians(90)),Math.toRadians(90)) //drop off first
+                        .setTangent(Math.toRadians(315))
+                        .splineToLinearHeading(new Pose2d(36,-59,Math.toRadians(270)),Math.toRadians(270)) //pickup
+                        .setTangent(Math.toRadians(120))
+                        .splineToLinearHeading(new Pose2d(0,-32,Math.toRadians(90)),Math.toRadians(90)) //drop off second
+                        .setTangent(Math.toRadians(315))
+                        .splineToLinearHeading(new Pose2d(36,-59,Math.toRadians(270)),Math.toRadians(270)) //pickup
+                        .setTangent(Math.toRadians(120))
+                        .splineToLinearHeading(new Pose2d(0,-32,Math.toRadians(90)),Math.toRadians(90)) //drop off third
+                        .setTangent(Math.toRadians(330))
+                        .splineToLinearHeading(new Pose2d(40,-59,Math.toRadians(90)),Math.toRadians(0)) //park
+
 
 
 

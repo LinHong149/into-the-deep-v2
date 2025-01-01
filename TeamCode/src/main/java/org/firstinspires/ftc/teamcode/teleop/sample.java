@@ -70,7 +70,7 @@ public class sample extends LinearOpMode{
         INTAKING,
         HANG
     }
-    Mode mode = Mode.REST;
+    Mode mode = Mode.HANG;
 
 
 
@@ -101,24 +101,20 @@ public class sample extends LinearOpMode{
         BL.setPower(0);
         BR.setPower(0);
 
-        wrist.setPosition(wristPerp);
-        claw.setPosition(clawClose);
-        rotation.setPosition(0.5);
+        wrist.setPosition(wristPar);
+
 
         AMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        AMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         AMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         AMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         AMotor.setPower(0);
 
         S1Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        S1Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         S1Motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         S1Motor.setDirection(DcMotorSimple.Direction.REVERSE);
         S1Motor.setPower(0);
 
         S2Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        S2Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         S2Motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         S2Motor.setDirection(DcMotorSimple.Direction.REVERSE);
         S2Motor.setPower(0);
@@ -390,7 +386,7 @@ public class sample extends LinearOpMode{
                 case HANG:
                     if (init) {
                         clawIsOpen = false;
-                        armTarget = 600;
+                        armTarget = 700;
                         slideTarget = 800;
                         wrist.setPosition(wristPar);
                         rotation.setPosition(0.5);
