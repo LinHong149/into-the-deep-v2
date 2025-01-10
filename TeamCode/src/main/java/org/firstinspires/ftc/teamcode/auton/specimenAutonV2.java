@@ -29,27 +29,28 @@ import org.firstinspires.ftc.teamcode.teleop.sample;
 
 @Config
 @Autonomous
-public class specimenAuton extends LinearOpMode{
+public class specimenAutonV2 extends LinearOpMode{
 
-    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.8;
+    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
     public double clawOpen = 0.25, clawClose = 0.77;
     public double rotationPos = 0.465;
     public double armDown = 50;
-    public double armPar = 150, armOuttakingAim = 700, armOuttakingScore = 415, armBackwardsOuttaking = 1130;
-    public double slideRest = 200, slideForwardsOuttaking = 820, slideOuttakingAim = 600, slideOuttakingScore = 1400;
+    public double armPar = 125, armOuttakingScore = 545, armBackwardsOuttaking = 1075;
+    public double slideRest = 200, slideForwardsOuttaking = 1700, slideOuttakingAim = 720, slideOuttakingScore = 1600;
 
     //  ARM PID
     PIDFController armPIDF = new PIDFController(0,0,0, 0);
-    static double armP = 0.007, armI = 0, armD = 0, armF = 0;
-    static double armTarget = 0.0;
+    double armP = 0.007, armI = 0, armD = 0, armF = 0;
+    double armTarget = 0.0;
 
     //  SLIDES PID
     PIDFController slidePIDF = new PIDFController(0,0,0, 0);
-    static double slideP = 0.0034, slideI = 0, slideD = 0, slideF = 0;
-    static double slidePE = 0.008, slideIE = 0, slideDE = 0, slideFE = 0;
-    static double slideTarget = 0.0;
+    double slideP = 0.0034, slideI = 0, slideD = 0, slideF = 0;
+    double slidePE = 0.008, slideIE = 0, slideDE = 0, slideFE = 0;
+    double slideTarget = 0.0;
     double slidePower = 0.0;
-    double slideCurr = 0;
+    public double slideCurr = 0;
+    public boolean scoreBackwards = false;
 
     public enum Mode {
         INTAKING,
@@ -92,11 +93,8 @@ public class specimenAuton extends LinearOpMode{
         public class ToRest implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                if (mode == Mode.AIM) {
-                    armTarget = armOuttakingAim + 50;
-                }
-                else if (mode == Mode.SCORE) {
-                    armTarget = armOuttakingScore + 200;
+                if (mode == Mode.SCORE) {
+                    armTarget = armOuttakingScore + 50;
                 }
                 mode = Mode.REST;
                 slideTarget = slideRest;
@@ -131,44 +129,6 @@ public class specimenAuton extends LinearOpMode{
         }
 
 
-        /** To outtaking aim */
-        public class ToOuttakingForwardAim implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                mode = Mode.AIM;
-                armTarget = armOuttakingAim;
-
-//                PID
-                AMotor.setPower(armPIDF(armTarget, AMotor));
-                slidePower = slidePIDF(slideTarget, S1Motor, S2Motor);
-                S1Motor.setPower(slidePower);
-                S2Motor.setPower(slidePower);
-
-                packet.put("arm", AMotor.getCurrentPosition());
-                packet.put("slide", S1Motor.getCurrentPosition());
-
-
-//                Arm down after slide comes down
-                if (Math.abs(AMotor.getCurrentPosition() - armTarget) < 400) {
-                    slideTarget = slideForwardsOuttaking;
-                }
-
-//                Keep repeating until arm Motor gets to target
-                if (Math.abs(S1Motor.getCurrentPosition() - slideTarget) < 150 && slideTarget == slideForwardsOuttaking) {
-                    S1Motor.setPower(0);
-                    S2Motor.setPower(0);
-                    AMotor.setPower(0);
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }
-        public Action toOuttakingForwardAim() {
-            return new ToOuttakingForwardAim();
-        }
-
-
 
         /** To outtaking score */
         public class ToOuttakingForwardScore implements Action {
@@ -176,6 +136,7 @@ public class specimenAuton extends LinearOpMode{
             public boolean run(@NonNull TelemetryPacket packet) {
                 mode = Mode.SCORE;
                 armTarget = armOuttakingScore;
+                slideTarget = slideForwardsOuttaking;
 
 //                PID
                 AMotor.setPower(armPIDF(armTarget, AMotor));
@@ -187,13 +148,9 @@ public class specimenAuton extends LinearOpMode{
                 packet.put("slide", S1Motor.getCurrentPosition());
 
 
-//                Arm down after slide comes down
-                if (Math.abs(AMotor.getCurrentPosition() - armTarget) < 400) {
-                    slideTarget = slideForwardsOuttaking;
-                }
 
 //                Keep repeating until arm Motor gets to target
-                if (Math.abs(AMotor.getCurrentPosition() - armTarget) < 50) {
+                if (Math.abs(AMotor.getCurrentPosition() - armTarget) < 50 && Math.abs(S1Motor.getCurrentPosition()-slideTarget) < 100) {
                     S1Motor.setPower(0);
                     S2Motor.setPower(0);
                     AMotor.setPower(0);
@@ -215,6 +172,7 @@ public class specimenAuton extends LinearOpMode{
         public class ToOuttakingBackwardAim implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
+                scoreBackwards = true;
                 armTarget = armBackwardsOuttaking;
                 slideCurr = S1Motor.getCurrentPosition();
 
@@ -289,7 +247,7 @@ public class specimenAuton extends LinearOpMode{
 
 
 
-/** Intaking system class */
+    /** Intaking system class */
     public class IntakingSystem {
         private Servo claw, wrist, rotation;
 
@@ -355,14 +313,15 @@ public class specimenAuton extends LinearOpMode{
         public class BackCloseClaw implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                if (slideCurr > 400) {
+                if (slideTarget > 600) {
                     wrist.setPosition(wristOuttake);
+                    return false;
                 }
                 rotation.setPosition(rotationPos);
                 claw.setPosition(clawClose);
 
                 packet.put("intaking", "intaking close claw");
-                return false;
+                return true;
             }
         }
         public Action backCloseClaw() {
@@ -383,47 +342,47 @@ public class specimenAuton extends LinearOpMode{
                 .turn(Math.toRadians(5));
 
         TrajectoryActionBuilder dropOffPreloaded = drive.actionBuilder(initialPose)
-                .splineToConstantHeading(new Vector2d(0, -33), Math.toRadians(90)); //drop off pre loaded
+                .splineToConstantHeading(new Vector2d(0, -31), Math.toRadians(90)); //drop off pre loaded
 
         TrajectoryActionBuilder pushSamples = drive.actionBuilder(new Pose2d(0, -34, Math.toRadians(90)))
-                .setTangent(Math.toRadians(300))
-                .splineToConstantHeading(new Vector2d(34, -40), Math.toRadians(90)) //path around submersible
+                .setTangent(Math.toRadians(320))
+                .splineToConstantHeading(new Vector2d(34, -28), Math.toRadians(90)) //path around submersible
                 .setTangent(Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(35, -6), Math.toRadians(300)) //to first
-                .splineToConstantHeading(new Vector2d(44, -56), Math.toRadians(90)) //push observation zone
-                .splineToConstantHeading(new Vector2d(52, -6), Math.toRadians(300)) //to second
-                .splineToConstantHeading(new Vector2d(50, -50), Math.toRadians(90)) //push observation zone
-                .splineToLinearHeading(new Pose2d(36,-50,Math.toRadians(265)),Math.toRadians(270)) //turn
-                .splineToConstantHeading(new Vector2d(36,-58),Math.toRadians(270)); //intaking
+                .splineToConstantHeading(new Vector2d(44, -11), Math.toRadians(300)) //to first
+                .splineToConstantHeading(new Vector2d(44, -55), Math.toRadians(90)) //push observation zone
+                .splineToConstantHeading(new Vector2d(57, -11), Math.toRadians(300)) //to second
+                .splineToConstantHeading(new Vector2d(46, -53), Math.toRadiansin hong
+                        (180)) //push observation zone
+                .splineToSplineHeading(new Pose2d(36,-50,Math.toRadians(265)),Math.toRadians(270)) //turn
+                .splineToConstantHeading(new Vector2d(36,-58.5),Math.toRadians(270)); //intaking
 
-        TrajectoryActionBuilder dropOffFirst = drive.actionBuilder(new Pose2d(36, -58, Math.toRadians(260)))
+        TrajectoryActionBuilder dropOffFirst = drive.actionBuilder(new Pose2d(36, -58.5, Math.toRadians(260)))
                 .setReversed(true)
-                .splineToLinearHeading(new Pose2d(0,-31,Math.toRadians(270)),Math.toRadians(90)); //drop off first
-        TrajectoryActionBuilder intakingSecond = drive.actionBuilder(new Pose2d(0, -31, Math.toRadians(275)))
+                .splineToLinearHeading(new Pose2d(0,-30,Math.toRadians(270)),Math.toRadians(90)); //drop off first
+        TrajectoryActionBuilder intakingSecond = drive.actionBuilder(new Pose2d(0, -30, Math.toRadians(275)))
                 .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(new Pose2d(36,-59,Math.toRadians(270)),Math.toRadians(270)); //intaking
-        TrajectoryActionBuilder dropOffSecond = drive.actionBuilder(new Pose2d(36, -59, Math.toRadians(270)))
+                .splineToLinearHeading(new Pose2d(36,-56.5,Math.toRadians(270)),Math.toRadians(270)); //intaking
+        TrajectoryActionBuilder dropOffSecond = drive.actionBuilder(new Pose2d(36, -56.5, Math.toRadians(270)))
                 .setTangent(Math.toRadians(120))
-                .splineToLinearHeading(new Pose2d(0,-33,Math.toRadians(270)),Math.toRadians(90)); //drop off second
-        TrajectoryActionBuilder intakingThird = drive.actionBuilder(new Pose2d(0, -33, Math.toRadians(270)))
+                .splineToLinearHeading(new Pose2d(-2,-26.5,Math.toRadians(270)),Math.toRadians(90)); //drop off second
+        TrajectoryActionBuilder intakingThird = drive.actionBuilder(new Pose2d(-2, -26.5, Math.toRadians(270)))
                 .setTangent(Math.toRadians(315))
-                .splineToLinearHeading(new Pose2d(36,-59,Math.toRadians(270)),Math.toRadians(270)); //intaking
-        TrajectoryActionBuilder dropOffThird = drive.actionBuilder(new Pose2d(36, -59, Math.toRadians(270)))
+                .splineToLinearHeading(new Pose2d(36,-58,Math.toRadians(270)),Math.toRadians(270)); //intaking
+        TrajectoryActionBuilder dropOffThird = drive.actionBuilder(new Pose2d(36, -58.5, Math.toRadians(270)))
                 .setTangent(Math.toRadians(120))
                 .splineToLinearHeading(new Pose2d(-3,-33,Math.toRadians(270)),Math.toRadians(90)); //drop off third
         TrajectoryActionBuilder park = drive.actionBuilder(new Pose2d(-3, -33, Math.toRadians(270)))
                 .splineToLinearHeading(new Pose2d(40,-59,Math.toRadians(270)),Math.toRadians(0)); //park
 
 
-// TODO: add a differnt wrist pose for backwards outtaking
 
 
 
 //        Initialization
         Actions.runBlocking(
                 new SequentialAction(
-                        intakingSystem.perpCloseClaw(),
-                        armSlide.toRest()
+                        armSlide.toRest(),
+                        intakingSystem.perpCloseClaw()
                 )
         );
 
@@ -436,52 +395,55 @@ public class specimenAuton extends LinearOpMode{
             Actions.runBlocking(
                     new SequentialAction(
 //                            Drops preloaded and pushes samples
-                        new ParallelAction(
-                            armSlide.toOuttakingForwardAim(),
-                            dropOffPreloaded.build()
-                        ),
-                        armSlide.toOuttakingForwardScore(),
+                            new ParallelAction(
+                                armSlide.toOuttakingForwardScore(),
+                                intakingSystem.backCloseClaw(),
+                                dropOffPreloaded.build()
+                            ),
 //                        new SleepAction(0.2),
-                        intakingSystem.perpOpenClaw(),
+                            intakingSystem.perpOpenClaw(),
 //                        new SleepAction(0.2),
-                        new ParallelAction(
-                            armSlide.toRest(),
-                            pushSamples.build()
-                        ),
+                            new ParallelAction(
+                                    armSlide.toRest(),
+                                    pushSamples.build()
+                            ),
 
 //                        Grabs first sample and scores
+                            new SleepAction(0.5),
+                            intakingSystem.perpCloseClaw(),
+                            new SleepAction(0.3), //needed
+                            new ParallelAction (
+                                    armSlide.toOuttakingBackwardAim(),
+                                    intakingSystem.backCloseClaw(),
+                                    dropOffFirst.build()
+                            ),
+                            armSlide.toOuttakingBackwardScore(),
+                            intakingSystem.backOpenClaw(),
+                            new SleepAction(0.1),
+
+//                        Grab second sample and score
+                            new ParallelAction (
+                                    intakingSystem.perpOpenClaw(),
+                                    armSlide.toRest(),
+                                    intakingSecond.build()
+                            ),
                         new SleepAction(0.5),
                         intakingSystem.perpCloseClaw(),
+                        new SleepAction(0.3), //needed
                         new ParallelAction (
-                            armSlide.toOuttakingBackwardAim(),
-                            dropOffFirst.build(),
-                            intakingSystem.backCloseClaw()
+                                armSlide.toOuttakingBackwardAim(),
+                                intakingSystem.backCloseClaw(),
+                                dropOffSecond.build()
                         ),
                         armSlide.toOuttakingBackwardScore(),
                         intakingSystem.backOpenClaw(),
 
+
 //                        Grab second sample and score
                         new ParallelAction (
-                            intakingSystem.perpOpenClaw(),
-                            armSlide.toRest(),
-                            intakingSecond.build()
+                                armSlide.toRest(),
+                                intakingThird.build()
                         )
-//                        new SleepAction(0.5),
-//                        intakingSystem.closeClaw(),
-//                        new ParallelAction (
-//                                armSlide.toOuttakingBackwardAim(),
-//                                dropOffSecond.build()
-//                        ),
-//                        armSlide.toOuttakingBackwardScore(),
-//                        intakingSystem.openClaw(),
-//
-//
-//
-////                        Grab second sample and score
-//                        new ParallelAction (
-//                                armSlide.toRest(),
-//                                intakingThird.build()
-//                        ),
 //                        new SleepAction(0.5),
 //                        intakingSystem.closeClaw(),
 //                        new ParallelAction (

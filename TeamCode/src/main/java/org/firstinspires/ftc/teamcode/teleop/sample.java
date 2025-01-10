@@ -58,6 +58,8 @@ public class sample extends LinearOpMode{
     boolean micro = false;
     boolean intakePrev = false;
     boolean slideRest = false;
+    boolean firstRun = true;
+    boolean firstRun1 = true;
 
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
@@ -70,7 +72,7 @@ public class sample extends LinearOpMode{
         INTAKING,
         HANG
     }
-    Mode mode = Mode.REST;
+    Mode mode = Mode.HANG;
 
 
 
@@ -101,40 +103,45 @@ public class sample extends LinearOpMode{
         BL.setPower(0);
         BR.setPower(0);
 
-        wrist.setPosition(wristPerp);
-        claw.setPosition(clawClose);
-        rotation.setPosition(0.5);
+//        wrist.setPosition(wristPar);
+
 
         AMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        AMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         AMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         AMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         AMotor.setPower(0);
 
         S1Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        S1Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         S1Motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         S1Motor.setDirection(DcMotorSimple.Direction.REVERSE);
         S1Motor.setPower(0);
 
         S2Motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        S2Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         S2Motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         S2Motor.setDirection(DcMotorSimple.Direction.REVERSE);
         S2Motor.setPower(0);
 //
-//        armTarget = 800;
+//        armTarget = 700;
+//        slideTarget = 800;
 ////        Runs to arm pose
 //        ElapsedTime timer = new ElapsedTime();
 //        while (Math.abs(AMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 3 seconds
-//            double power = armPIDF(armTarget, AMotor);
-//            AMotor.setPower(power);
+//            double armPower = armPIDF(armTarget, AMotor);
+//            AMotor.setPower(armPower);
+//
+//            double slidePower = slidePIDF(slideTarget, S1Motor, S2Motor);
+//            S1Motor.setPower(slidePower);
+//            S2Motor.setPower(slidePower);
 //
 //            telemetry.addData("Arm Position", AMotor.getCurrentPosition());
 //            telemetry.addData("Arm Target", armTarget);
+//            telemetry.addData("Slide Position", S1Motor.getCurrentPosition());
+//            telemetry.addData("Slide Target", slideTarget);
 //            telemetry.update();
 //        }
 //        AMotor.setPower(0);
+//        S1Motor.setPower(0);
+//        S2Motor.setPower(0);
     }
 
 //
@@ -189,14 +196,14 @@ public class sample extends LinearOpMode{
 //                        rotation.setPosition(1 - (Math.acos(x / (Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5))) / Math.PI));
 //                    }
 //                }
-                slideTarget += (y > 0 && slideTarget < slideMax) ? slideInterval * y / 1.5 : 0;
-                slideTarget += (y < 0 && slideTarget > 300) ? slideInterval * y / 1.5 : 0;
+                slideTarget += (y > 0 && slideTarget < slideMax) ? 30 * y / 1.5 : 0;
+                slideTarget += (y < 0 && slideTarget > 300) ? 30 * y / 1.5 : 0;
                 if (gamepad1.left_trigger > 0 && rotationPos >= 0) {
-                    rotationPos -= gamepad1.left_trigger / 80;
+                    rotationPos -= gamepad1.left_trigger / 60;
                     if (rotationPos < 0) rotationPos = 1; // Ensure upper bound
                 }
                 if (gamepad1.right_trigger > 0 && rotationPos <= 1) {
-                    rotationPos += gamepad1.right_trigger / 80;
+                    rotationPos += gamepad1.right_trigger / 60;
                     if (rotationPos > 1) rotationPos = 0; // Ensure lower bound
                 }
                 rotation.setPosition(rotationPos);
@@ -302,104 +309,126 @@ public class sample extends LinearOpMode{
                 if (mode == Mode.REST) {
                     mode = Mode.HANG;
                 } else if (mode == Mode.HANG) {
+                    wrist.setPosition(wristPerp);
                     mode = Mode.REST;
                 }
                 init = true;
             }
             hangPrev = hangCurr;
 
-
-            telemetry.addData("mode type", mode);
-            switch (mode) {
-/** REST */
-                case REST:
-                    if (init) {
-                        slideTarget = 200;
-                        rotation.setPosition(0.5);
-                        slideRest = true;
+            if (firstRun) {
+                if (firstRun1) {
+                    armTarget = 800;
+                    slideTarget = 300;
+                    wrist.setPosition(wristPerp);
+                    if (S1Motor.getCurrentPosition() < 350 && AMotor.getCurrentPosition() > 700) {
+                        armTarget = 200;
+                        firstRun1 = false;
                     }
-                    init = false;
+                }
+                else if (!firstRun1 && AMotor.getCurrentPosition() < 300) {
+                    micro = true;
+                    rotationPos = 0.5;
+                    slideTarget = 800;
+                    mode = Mode.INTAKING;
+                    init = true;
+                    firstRun = false;
+                }
+            } else {
 
 
-                    if (slideRest && S1Motor.getCurrentPosition()-200 < outToRestBuffer) { //distance from slide retracted
-                        armTempTarget = armPar;
-                        slideRest = false;
-                        wrist.setPosition(wristPerp);
-                    }
+                telemetry.addData("mode type", mode);
 
-// ARM POSITION
-                    armTarget = armTempTarget;
-
-// CHANGE TO INTAKING
-
-
-                    boolean intakeCurr = gamepad1.left_bumper;
-                    if (intakeCurr && !intakePrev) {
-                        micro = true;
-                        rotationPos = 0.5;
-                        slideTarget = 1000;
-                        mode = Mode.INTAKING;
-                        init = true;
-                    }
-                    intakePrev = intakeCurr;
-
-                    break;
-
-/** INTAKING */
-                case INTAKING:
-                    if (init) {
-                        wrist.setPosition(wristPar);
-                        clawIsOpen = true;
-                        armTempTarget = armPar;
-                    }
-                    init = false;
+                switch (mode) {
+                    /** REST */
+                    case REST:
+                        if (init) {
+                            slideTarget = 200;
+                            rotation.setPosition(0.5);
+                            slideRest = true;
+                        }
+                        init = false;
 
 
-//  LOWER ARM
-                    armTarget = (gamepad1.left_bumper) ? armDown : armTempTarget;
+                        if (slideRest && S1Motor.getCurrentPosition() - 200 < outToRestBuffer) { //distance from slide retracted
+                            armTempTarget = armPar;
+                            slideRest = false;
+                            wrist.setPosition(wristPerp);
+                        }
+
+                        // ARM POSITION
+                        armTarget = armTempTarget;
+
+                        // CHANGE TO INTAKING
 
 
-                    break;
+                        boolean intakeCurr = gamepad1.left_bumper;
+                        if (intakeCurr && !intakePrev) {
+                            micro = true;
+                            rotationPos = 0.5;
+                            slideTarget = 1000;
+                            mode = Mode.INTAKING;
+                            init = true;
+                        }
+                        intakePrev = intakeCurr;
 
-/** OUTTAKING */
-                case OUTTAKING:
-                    if (init) {
-                        armTempTarget = armUp;
-                        slideOuttake = true;
-                        rotation.setPosition(0.5);
-                        wrist.setPosition(wristPar);
+                        break;
 
-
-                    }
-                    init = false;
-                    if (S1Motor.getCurrentPosition()>1000){
-                        wrist.setPosition(wristOuttake);
-                    }
-                    if (slideOuttake && armTempTarget - AMotor.getCurrentPosition() < restToOuttake) {
-                        slideTarget = slideMax;
-                        slideOuttake = false;
-                    }
-
-
-//  ARM
-                    armTarget = armTempTarget;
-
-                    break;
-
-/** HANG */
-                case HANG:
-                    if (init) {
-                        clawIsOpen = false;
-                        armTarget = 600;
-                        slideTarget = 800;
-                        wrist.setPosition(wristPar);
-                        rotation.setPosition(0.5);
-                    }
+                    /** INTAKING */
+                    case INTAKING:
+                        if (init) {
+                            wrist.setPosition(wristPar);
+                            clawIsOpen = true;
+                            armTempTarget = armPar;
+                        }
+                        init = false;
 
 
-                    break;
+                        //  LOWER ARM
+                        armTarget = (gamepad1.left_bumper) ? armDown : armTempTarget;
+
+
+                        break;
+
+                    /** OUTTAKING */
+                    case OUTTAKING:
+                        if (init) {
+                            armTempTarget = armUp;
+                            slideOuttake = true;
+                            rotation.setPosition(0.5);
+                            wrist.setPosition(wristPar);
+
+
+                        }
+                        init = false;
+                        if (S1Motor.getCurrentPosition() > 1000) {
+                            wrist.setPosition(wristOuttake);
+                        }
+                        if (slideOuttake && armTempTarget - AMotor.getCurrentPosition() < restToOuttake) {
+                            slideTarget = slideMax;
+                            slideOuttake = false;
+                        }
+
+
+                        //  ARM
+                        armTarget = armTempTarget;
+
+                        break;
+
+                    /** HANG */
+                    case HANG:
+                        if (init) {
+                            clawIsOpen = false;
+                            armTarget = 700;
+                            slideTarget = 800;
+                            wrist.setPosition(wristPar);
+                            rotation.setPosition(0.5);
+                        }
+
+
+                        break;
+                }
             }
-
 
             telemetry.addData("arm current", AMotor.getCurrentPosition());
             telemetry.addData("arm target", armTarget);
@@ -409,6 +438,8 @@ public class sample extends LinearOpMode{
 
             telemetry.addData("rotation", rotationPos);
             telemetry.addData("init", init);
+            telemetry.addData("firstRun ", firstRun);
+            telemetry.addData("firstRun1", firstRun1);
 
             telemetry.update();
             dashboardTelemetry.update();
