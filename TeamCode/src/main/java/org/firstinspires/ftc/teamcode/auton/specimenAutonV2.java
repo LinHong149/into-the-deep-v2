@@ -351,8 +351,7 @@ public class specimenAutonV2 extends LinearOpMode{
                 .splineToConstantHeading(new Vector2d(44, -11), Math.toRadians(300)) //to first
                 .splineToConstantHeading(new Vector2d(44, -55), Math.toRadians(90)) //push observation zone
                 .splineToConstantHeading(new Vector2d(57, -11), Math.toRadians(300)) //to second
-                .splineToConstantHeading(new Vector2d(46, -53), Math.toRadiansin hong
-                        (180)) //push observation zone
+                .splineToConstantHeading(new Vector2d(46, -53), Math.toRadians(180)) //push observation zone
                 .splineToSplineHeading(new Pose2d(36,-50,Math.toRadians(265)),Math.toRadians(270)) //turn
                 .splineToConstantHeading(new Vector2d(36,-58.5),Math.toRadians(270)); //intaking
 

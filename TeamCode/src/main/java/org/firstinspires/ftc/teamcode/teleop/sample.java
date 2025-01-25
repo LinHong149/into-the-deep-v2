@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -9,7 +8,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -21,7 +19,7 @@ public class sample extends LinearOpMode{
     Telemetry dashboardTelemetry = dashboard.getTelemetry();
 
     DcMotorEx AMotor, S1Motor, S2Motor, FL, FR, BL, BR = null;
-    Servo rotation, wrist, claw;
+    Servo rotation, wrist, claw,hangL,hangR;
 
     public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
     public double clawOpen = 0.25, clawClose = 0.75;
@@ -48,6 +46,10 @@ public class sample extends LinearOpMode{
     boolean switched = false;
     boolean switchPrev = false;
     boolean hangPrev = false;
+    boolean hangYPrev = false;
+    boolean toHang = false;
+    boolean hangBPrev = false;
+    boolean hanging = false;
     boolean clawPressed = false;
     boolean clawIsOpen = false;
     boolean init = true;
@@ -89,6 +91,9 @@ public class sample extends LinearOpMode{
         rotation = hardwareMap.get(Servo.class,"rotation");
         wrist = hardwareMap.get(Servo.class,"wrist");
         claw = hardwareMap.get(Servo.class,"claw");
+        hangL = hardwareMap.get(Servo.class,"hangL");
+        hangR = hardwareMap.get(Servo.class,"hangR");
+
 
         FL.setDirection(DcMotorEx.Direction.REVERSE);
         BL.setDirection(DcMotorEx.Direction.REVERSE);
@@ -303,6 +308,33 @@ public class sample extends LinearOpMode{
             }
             switchPrev = switchCurr;
 
+            boolean hangYCurr = gamepad1.y;
+            if (hangYCurr && !hangYPrev){
+                toHang = !toHang;
+            }
+            hangYPrev = hangYCurr;
+
+            boolean hangBCurr = gamepad1.b;
+            if (hangBCurr && !hangBPrev){
+                hanging = !hanging;
+            }
+            hangBPrev = hangBCurr;
+
+            if (toHang){
+                if (hanging){
+                    hangL.setPosition(0.52);
+                    hangR.setPosition(0.46);
+                }else {
+                    hangL.setPosition(1);
+                    hangR.setPosition(0);
+                }
+            }else{
+                hangL.setPosition(0.5);
+                hangR.setPosition(0.5);
+            }
+
+
+
 
             boolean hangCurr = gamepad1.left_stick_button;
             if (hangCurr && !hangPrev) {
@@ -440,7 +472,7 @@ public class sample extends LinearOpMode{
             telemetry.addData("init", init);
             telemetry.addData("firstRun ", firstRun);
             telemetry.addData("firstRun1", firstRun1);
-
+            telemetry.addData("hang",hanging);
             telemetry.update();
             dashboardTelemetry.update();
 
