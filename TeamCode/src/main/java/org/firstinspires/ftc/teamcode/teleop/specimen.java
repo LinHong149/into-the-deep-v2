@@ -24,10 +24,10 @@ public class specimen extends LinearOpMode{
     Servo rotation, wrist, claw;
 
     public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.8;
-    public double clawOpen = 0.25, clawClose = 0.75;
-    public double rotationPos = 0.465;
-    public double armDown = 50;
-    public double armPar = 100, armUp = 1130;
+    public double clawOpen = 0.27, clawClose = 0.75;
+    public double rotationPos = 0.46;
+    public double armDown = 30;
+    public double armPar = 100, armUp = 1170;
     public int slideInterval = 15;
     public double outToRestBuffer = 800, restToOuttake = 1000;
 
@@ -60,7 +60,7 @@ public class specimen extends LinearOpMode{
     double frontLeftPower, frontRightPower, backLeftPower, backRightPower;
     double armTempTarget = armPar;
     double armMax = 1350;
-    double slideMax = 1400;
+    double slideMax = 1500;
 
     public enum Mode {
         REST,
@@ -218,7 +218,7 @@ public class specimen extends LinearOpMode{
             if (mode == Mode.INTAKING || micro) {
                 slideMax = 2000;
             } else {
-                slideMax = 1400;
+                slideMax = 1500;
             }
 
 
