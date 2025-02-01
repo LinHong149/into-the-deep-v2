@@ -23,11 +23,11 @@ public class specimen extends LinearOpMode{
     DcMotorEx AMotor, S1Motor, S2Motor, FL, FR, BL, BR = null;
     Servo rotation, wrist, claw;
 
-    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.8;
-    public double clawOpen = 0.27, clawClose = 0.75;
+    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.85;
+    public double clawOpen = 0.27, clawClose = 0.77;
     public double rotationPos = 0.46;
     public double armDown = 30;
-    public double armPar = 100, armUp = 1170;
+    public double armPar = 100, armUp = 1300;
     public int slideInterval = 15;
     public double outToRestBuffer = 800, restToOuttake = 1000;
 

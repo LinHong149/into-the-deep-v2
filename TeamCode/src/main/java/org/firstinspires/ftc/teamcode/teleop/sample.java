@@ -21,11 +21,11 @@ public class sample extends LinearOpMode{
     DcMotorEx AMotor, S1Motor, S2Motor, FL, FR, BL, BR = null;
     Servo rotation, wrist, claw,hangL,hangR;
 
-    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.75;
-    public double clawOpen = 0.27, clawClose = 0.75;
+    public double wristPar = 0.1, wristPerp = 0.62, wristOuttake = 0.82;
+    public double clawOpen = 0.27, clawClose = 0.77;
     public double rotationPos = 0.46;
     public double armDown = 30;
-    public double armPar = 150, armUp = 1250;
+    public double armPar = 150, armUp = 1300;
     public int slideInterval = 15;
     public double outToRestBuffer = 800, restToOuttake = 1000;
 
@@ -47,7 +47,9 @@ public class sample extends LinearOpMode{
     boolean switchPrev = false;
     boolean hangPrev = false;
     boolean hangYPrev = false;
+    boolean hangXPrev = false;
     boolean toHang = false;
+    boolean hangBack = false;
     boolean hangBPrev = false;
     boolean hanging = false;
     boolean clawPressed = false;
@@ -320,11 +322,20 @@ public class sample extends LinearOpMode{
             }
             hangBPrev = hangBCurr;
 
+            boolean hangXCurr = gamepad1.x;
+            if (hangXCurr && !hangXPrev){
+                hangBack = !hangBack;
+            }
+            hangXPrev = hangXCurr;
+
             if (toHang){
                 if (hanging){
                     hangL.setPosition(0.52);
                     hangR.setPosition(0.46);
-                }else {
+                }else if(hangBack){
+                    hangL.setPosition(0);
+                    hangR.setPosition(1);
+                }else{
                     hangL.setPosition(1);
                     hangR.setPosition(0);
                 }
