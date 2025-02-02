@@ -25,7 +25,7 @@ public class sample extends LinearOpMode{
     public double clawOpen = 0.27, clawClose = 0.77;
     public double rotationPos = 0.46;
     public double armDown = 30;
-    public double armPar = 150, armUp = 1300;
+    public double armPar = 150, armUp = 1200;
     public int slideInterval = 15;
     public double outToRestBuffer = 800, restToOuttake = 1000;
 
@@ -134,7 +134,16 @@ public class sample extends LinearOpMode{
 //        ElapsedTime timer = new ElapsedTime();
 //        while (Math.abs(AMotor.getCurrentPosition() - armTarget) > 10 && timer.seconds() < 3) { // Safety timeout of 3 seconds
 //            double armPower = armPIDF(armTarget, AMotor);
-//            AMotor.setPower(armPower);
+//            AMotor.setPower(
+
+
+
+
+
+
+
+
+//            Power);
 //
 //            double slidePower = slidePIDF(slideTarget, S1Motor, S2Motor);
 //            S1Motor.setPower(slidePower);
@@ -361,7 +370,7 @@ public class sample extends LinearOpMode{
 
             if (firstRun) {
                 if (firstRun1) {
-                    armTarget = 800;
+                    armTarget = 1000;
                     slideTarget = 300;
                     wrist.setPosition(wristPerp);
                     if (S1Motor.getCurrentPosition() < 350 && AMotor.getCurrentPosition() > 700) {

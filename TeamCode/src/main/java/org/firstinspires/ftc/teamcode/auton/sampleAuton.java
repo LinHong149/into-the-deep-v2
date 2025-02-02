@@ -350,10 +350,10 @@ public class sampleAuton extends LinearOpMode{
 
 
         TrajectoryActionBuilder dropOffPreload = drive.actionBuilder(initialPose)
-                .splineToLinearHeading(new Pose2d(-56,-58,Math.toRadians(45)),Math.toRadians(45))
+                .splineToLinearHeading(new Pose2d(-54.5,-56.5,Math.toRadians(45)),Math.toRadians(45))
                 .waitSeconds(.2);
         TrajectoryActionBuilder toFirstSample = drive.actionBuilder(new Pose2d(-54,-55,Math.toRadians(45)))
-                .splineTo(new Vector2d(-46,-39),Math.toRadians(90))
+                .splineTo(new Vector2d(-46,-38),Math.toRadians(90))
                 .waitSeconds(.1);
         TrajectoryActionBuilder dropOffFirst = drive.actionBuilder(new Pose2d(-44,-40,Math.toRadians(90)))
                 .setReversed(true)
@@ -361,17 +361,17 @@ public class sampleAuton extends LinearOpMode{
                 .waitSeconds(.2);
         TrajectoryActionBuilder toSecondSample = drive.actionBuilder(new Pose2d(-52,-53,Math.toRadians(45)))
                 .setReversed(false)
-                .splineTo(new Vector2d(-53,-36),Math.toRadians(103))
+                .splineTo(new Vector2d(-53,-35),Math.toRadians(103))
                 .waitSeconds(.1);
         TrajectoryActionBuilder dropOffSecond = drive.actionBuilder(new Pose2d(-53,-40,Math.toRadians(105)))
                 .setReversed(true)
-                .splineTo(new Vector2d(-54,-55),Math.toRadians(225))
+                .splineTo(new Vector2d(-54,-56),Math.toRadians(225))
                 .waitSeconds(.2);
         TrajectoryActionBuilder toThirdSample = drive.actionBuilder(new Pose2d(-52,-53,Math.toRadians(45)))
                 .setReversed(false)
-                .splineTo(new Vector2d(-57,-33),Math.toRadians(125))
+                .splineTo(new Vector2d(-57.5,-31.5),Math.toRadians(128))
                 .waitSeconds(.1);
-        TrajectoryActionBuilder dropOffThird = drive.actionBuilder(new Pose2d(-56,-40,Math.toRadians(125)))
+        TrajectoryActionBuilder dropOffThird = drive.actionBuilder(new Pose2d(-56,-40,Math.toRadians(128)))
                 .setReversed(true)
                 .splineTo(new Vector2d(-54,-56),Math.toRadians(225))
                 .waitSeconds(.2);
